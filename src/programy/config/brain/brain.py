@@ -33,15 +33,20 @@ class BrainConfiguration(BaseContainerConfigurationData):
     def __init__(self, section_name="brain"):
         self._overrides = BrainOverridesConfiguration()
         self._defaults = BrainDefaultsConfiguration()
+
         self._nodes = BrainNodesConfiguration()
         self._binaries = BrainBinariesConfiguration()
+
         self._braintree = BrainBraintreeConfiguration()
         self._files = BrainFilesConfiguration()
+
         self._services = BrainServicesConfiguration()
         self._security = BrainSecuritiesConfiguration()
+
         self._oob = BrainOOBSConfiguration()
         self._dynamics = BrainDynamicsConfiguration()
         self._tokenizer = BrainTokenizerConfiguration()
+        
         BaseContainerConfigurationData.__init__(self, section_name)
 
     @property

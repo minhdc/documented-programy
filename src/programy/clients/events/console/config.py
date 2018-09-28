@@ -22,7 +22,7 @@ class ConsoleConfiguration(ClientConfigurationData):
     def __init__(self):
         ClientConfigurationData.__init__(self, "console")
         self._default_userid = "console"
-        self._prompt = ">>>"
+        self._prompt = ">>>>>>>"
 
     @property
     def default_userid(self):
@@ -33,6 +33,9 @@ class ConsoleConfiguration(ClientConfigurationData):
         return self._prompt
 
     def load_configuration(self, configuration_file, bot_root):
+        #custom
+        print(self.__class__.__name__+": loading configuration...")
+        #### 
         console = configuration_file.get_section(self.section_name)
         if console is not None:
             self._default_userid = configuration_file.get_option(console, "default_userid", missing_value="Console")
@@ -42,7 +45,7 @@ class ConsoleConfiguration(ClientConfigurationData):
     def to_yaml(self, data, defaults=True):
         if defaults is True:
             data['default_userid'] = "console"
-            data['prompt'] = ">>>"
+            data['prompt'] = ">>>>>"
         else:
             data['default_userid'] = self._default_userid
             data['prompt'] = self._prompt

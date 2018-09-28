@@ -26,7 +26,9 @@ from programy.utils.classes.loader import ClassLoader
 
 
 class BrainSelector(object):
-
+    '''
+        Chọn Brain theo chủ đích bằng cách tự định nghĩa chủ đích đó trong hàm select_brain()
+    '''
     def __init__(self, configuration):
         self._configuration = configuration
 
@@ -35,6 +37,10 @@ class BrainSelector(object):
 
 
 class DefaultBrainSelector(BrainSelector):
+    '''
+        Chọn Brain mặc định bằng cách duyệt tuần tự trong danh sách
+        Danh sách brains lấy từ Configuration
+    '''
 
     def __init__(self, configuration):
         BrainSelector.__init__(self, configuration)
@@ -46,7 +52,15 @@ class DefaultBrainSelector(BrainSelector):
 
 
 class BrainFactory(object):
-
+    '''
+        Chứa Brain và các thao tác liên quan đến 1 Brain 
+        
+        @props:
+            _brains: dictionary - chứa các brains dạng <id, brain>
+            _brain_selector: lựa chonj Brain
+        
+        Tại sao lại phải dựng 1 class BrainSelector?? >> load mặc định hoặc load theo chủ đích 
+    '''
     def __init__(self, bot):
         self._brains = {}
         self.loads_brains(bot)
@@ -63,11 +77,19 @@ class BrainFactory(object):
             return None
 
     def loads_brains(self, bot):
+        '''
+            load brain theo config của Bot 
+        '''
         for config in bot.configuration.configurations:
             brain = Brain(bot, config)
             self._brains[brain.id] = brain
 
     def load_brain_selector(self, configuration):
+        '''
+            load BrainSelector mặc định nếu :
+                1)  Không tìm thấy configuration.brain_selector         <declarative??:> 
+                2) Lỗi khi load brain selector  <Programmative> 
+        '''
         if configuration.brain_selector is None:
             self._brain_selector = DefaultBrainSelector(configuration)
         else:
@@ -77,11 +99,25 @@ class BrainFactory(object):
                 self._brain_selector = DefaultBrainSelector(configuration)
 
     def select_brain(self):
+        '''
+            Dùng brain_selector đã được lựa chọn để select 1 brain 
+        '''
         return self._brain_selector.select_brain(self._brains)
 
 
 class Bot(object):
+    '''
+        Object có nhiệm vụ nhận câu hỏi và gửi câu trả lời
 
+        @props:
+            _configuration: BotConfiguration 
+            _client: 
+            _brain_factory: load BrainFactory
+            _question_depth: không hiểu lắm
+            _question_start_time: tại sao 2 props này đã có mặt trong contexxt r giờ lại có ở đây?
+            _spell_checker: bộ kiểm tra chính tả
+            _conversation: dictionary lưu thông tin các cuộc hội thoại theo mẫu <k,v>... thế k,v là gì? >> conversation là gì? cần làm rõ...
+    '''
     def __init__(self, config: BotConfiguration, client=None):
         self._configuration = config
         self._client = client
@@ -118,6 +154,9 @@ class Bot(object):
         return self._brain_factory
 
     def initiate_spellchecker(self):
+        '''     
+            Khởi tạo spellchecker 
+        '''
         # TODO Move this to Spelling bass class
         if self.configuration is not None:
             if self.configuration.spelling.classname is not None:
@@ -207,6 +246,11 @@ class Bot(object):
         return self.get_conversation(client_context)
 
     def get_conversation(self, client_context):
+        '''
+            Nếu user.id tồn tại trong conversations hiện thời thì load convo này ra
+            Nếu không thì khởi tạo 1 convo mới dựa trên ClientContext hiện tại
+                Không chỉ khởi tạo mà còn load convo này
+        '''
         # TODO move this to Conversations base class
         if client_context.userid in self._conversations:
             YLogger.info(client_context, "Retrieving conversation for client %s", client_context.userid)
@@ -227,6 +271,9 @@ class Bot(object):
             return conversation
 
     def initiate_conversation_storage(self):
+        '''
+            Khởi tạo nơi lưu trữ convo lên đĩa? 
+        '''
         if self.configuration is not None:
             if self.configuration.conversations is not None:
                 self._conversation_storage = ConversationStorageFactory.get_storage(self.configuration)
@@ -242,6 +289,9 @@ class Bot(object):
                                                              self.configuration.conversations.restore_last_topic)
 
     def save_conversation(self, clientid):
+        '''
+            Lưu convo lên đĩa 
+        '''
         if self._conversation_storage is not None:
             if clientid in self._conversations:
                 conversation = self._conversations[clientid]
@@ -250,6 +300,9 @@ class Bot(object):
                 YLogger.error(self, "Unknown conversation id type [%s] unable tonot persist!", clientid)
 
     def check_spelling_before(self, each_sentence):
+        '''
+            Kiếm tra & thay thế lỗi chính tả  
+        ''' 
         # TODO Move this to spelliing base class
         if self.configuration.spelling.check_before is True:
             text = each_sentence.text()
@@ -258,6 +311,9 @@ class Bot(object):
             each_sentence.replace_words(corrected)
 
     def check_spelling_and_retry(self, client_context, each_sentence):
+        '''
+            tại sao lại trả về repsonse??/ 
+        '''
         # TODO Move this to spelling base class
         if self.configuration.spelling.check_and_retry is True:
             text = each_sentence.text()
@@ -269,6 +325,9 @@ class Bot(object):
         return None
 
     def get_default_response(self, client_context):
+        '''
+            trả về default repsonse được định nghĩa trong config 
+        '''
         if self.default_response_srai is not None:
             sentence = Sentence(client_context.brain.tokenizer, self.default_response_srai)
             default_response = client_context.brain.ask_question(client_context, sentence)
@@ -279,6 +338,9 @@ class Bot(object):
             return self.default_response
 
     def get_initial_question(self, client_context):
+        '''
+            Đưa ra câu hỏi khởi động cho người dùng - được định nghĩa trong config 
+        '''
         if self.initial_question_srai is not None:
             sentence = Sentence(client_context.brain.tokenizer, self.initial_question_srai)
             initial_question = client_context.brain.ask_question(client_context, sentence)
@@ -299,6 +361,9 @@ class Bot(object):
             return self.exit_response
 
     def pre_process_text(self, client_context, text, srai):
+        '''
+            Gọi hàm trong Brain. dể tiền xử lý text dựa theo context 
+        '''
         if srai is False:
             pre_processed = client_context.brain.pre_process_question(client_context, text)
             YLogger.debug(client_context, "Pre Processed (%s): %s", client_context.userid, pre_processed)
@@ -311,15 +376,24 @@ class Bot(object):
         return pre_processed
 
     def get_question(self, client_context, pre_processed, srai):
+        '''
+            Khởi tạo câu hỏi từ đoạn text đã được pre_process 
+        '''
         if srai is False:
             return Question.create_from_text(client_context.brain.tokenizer, pre_processed, srai=srai)
         else:
             return Question.create_from_text(client_context.brain.tokenizer, pre_processed, split=False, srai=srai)
 
     def combine_answers(self, answers):
+        '''
+            Kết hợp các câu thành câu trả lời 
+        '''
         return ". ".join([sentence for sentence in answers if sentence is not None])
 
     def post_process_response(self, client_context, response, srai):
+        '''
+
+        '''
         if srai is False:
             answer = client_context.brain.post_process_response(client_context, response).strip()
             if not answer:
@@ -335,7 +409,14 @@ class Bot(object):
             responselogger.log_response(text, answer)
 
     def ask_question(self, client_context, text, srai=False, responselogger=None):
-
+        '''
+            Đưa ra câu hỏi cho người dùng? 
+                - khởi tạo bot & brain
+                - tiền xử lý câu hỏi
+                - add vào convo hiện thời
+                - ghép câu -> câu hỏi
+                - 
+        '''
         if srai is False:
             client_context.bot = self
             client_context.brain = client_context.bot.brain
@@ -393,7 +474,7 @@ class Bot(object):
         else:
             return self.handle_none_response(client_context, sentence, responselogger)
 
-        return answer
+        #return response
 
     def handle_response(self, client_context, sentence, response, srai, responselogger):
         YLogger.debug(client_context, "Raw Response (%s): %s", client_context.userid, response)
@@ -403,6 +484,9 @@ class Bot(object):
         return answer
 
     def handle_none_response(self, clientid, sentence, responselogger):
+        '''
+            
+        '''
         sentence.response = self.get_default_response(clientid)
         if responselogger is not None:
             responselogger.log_unknown_response(sentence)

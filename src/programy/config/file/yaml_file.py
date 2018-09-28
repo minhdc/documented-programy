@@ -99,7 +99,7 @@ class YamlConfigurationFile(BaseConfigurationFile):
             return [missing_value]
 
     def get_multi_file_option(self, section, option_name, bot_root, missing_value=None):
-
+        YLogger.info(self,"getting multi file in YAML config")
         if missing_value is None:
             missing_value = []
 

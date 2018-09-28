@@ -25,6 +25,7 @@ class ConsoleBotClient(EventBotClient):
     def __init__(self, argument_parser=None):
         self.running = False
         EventBotClient.__init__(self, "Console", argument_parser)
+        
 
     def get_description(self):
         return 'ProgramY AIML2.0 Console Client'
@@ -49,6 +50,8 @@ class ConsoleBotClient(EventBotClient):
 
     def process_question(self, client_context, question):
         # Returns a response
+        print("procesisng uestion")
+        YLogger.info(self,"heyyy")
         return client_context.bot.ask_question(client_context , question, responselogger=self)
 
     def render_response(self, client_context, response):
@@ -56,7 +59,8 @@ class ConsoleBotClient(EventBotClient):
         self._renderer.render(client_context, response)
 
     def process_response(self, client_context, response):
-        print(response)
+        print("fuvckkk",response)
+        YLogger.info(self,"fuvclll"+response)
 
     def process_question_answer(self, client_context):
         question = self.get_question(client_context)
@@ -72,7 +76,7 @@ class ConsoleBotClient(EventBotClient):
             running = False
             client_context = self.create_client_context(self._configuration.client_configuration.default_userid)
             self._renderer.render(client_context, client_context.bot.get_exit_response(client_context))
-        except Exception as excep:
+        except Exception as e:
             YLogger.exception(self, "Oops something bad happened !", e)
         return running
 
@@ -84,7 +88,7 @@ class ConsoleBotClient(EventBotClient):
 if __name__ == '__main__':
 
     def run():
-        print("Loading, please wait...")
+        print("Loading, please wait...,.......")
         console_app = ConsoleBotClient()
         console_app.run()
 

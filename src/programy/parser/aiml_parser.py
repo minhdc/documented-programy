@@ -127,6 +127,7 @@ class AIMLParser(object):
         start = datetime.datetime.now()
         total_aimls_loaded = 0
 
+        #need to customized this......... for conditional loading 
         for file in configuration.files.aiml_files.files:
             aimls_loaded = self._aiml_loader.load_dir_contents(file,
                                                                configuration.files.aiml_files.directories,

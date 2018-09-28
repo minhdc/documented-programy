@@ -20,6 +20,18 @@ import uuid
 from programy.utils.logging.ylogger import YLogger
 
 class ClientContext(object):
+    '''
+        Định nghĩa ra context cho 1 phiên làm việc 
+        
+        @Props: 
+            _client: 
+            _userid:    mã người dùng (trường hợp nhiều người chat)
+            _bot:       Object Bot - chịu trách nhiệm nhận và gửi đoạn chat
+            _brain:     Object Brain - chịu trách nhiệm xử lý câu hỏi và tạo câu trả lời tương ứng
+            _question_start_time:   thời gian câu hỏi (của người dùng hoặc của Bot - chỗ này cần xem lại)bắt đầu
+            _question_depth:        độ sâu câu hỏi? - KHÔNG RÕ LẮM
+            _id: UUID - KHÔNG HIỂU ĐỂ LÀM GÌ
+    '''
     
     def __init__(self, client, userid):
         self._client = client
@@ -31,6 +43,9 @@ class ClientContext(object):
         self._id = uuid.uuid1()
 
     def ylogger_type(self):
+        '''
+            Định nghĩa type cho Ylogger
+        '''
         return "context"
 
     @property
@@ -62,20 +77,33 @@ class ClientContext(object):
         self._brain = id
 
     def check_max_recursion(self):
+        '''
+            Kiểm tra giới hạn đệ quy của câu hỏi? -KHÔNG HIỂU 
+        '''
         if self.bot.configuration.max_question_recursion != -1:
             if self._question_depth > self.bot.configuration.max_question_recursion:
                 raise Exception("Maximum recursion limit [%d] exceeded" % self.bot.configuration.max_question_recursion)
 
     def total_search_time(self):
+        '''
+            Thời gian tìm kiếm câu trả lời cho câu hỏi tương ứng
+        '''
         delta = datetime.datetime.now() - self._question_start_time
         return abs(delta.total_seconds())
 
     def check_max_timeout(self):
+        '''
+            Kiểm tra timeout
+        '''
         if self.bot.configuration.max_question_timeout != -1:
             if self.total_search_time() >= self.bot.configuration.max_question_timeout:
                 raise Exception("Maximum search time limit [%d] exceeded" % self.bot.configuration.max_question_timeout)
 
     def mark_question_start(self, question):
+        '''
+            đánh dáu thời điểm question được nhận 
+            Không hiểu question-depth để làm gì 
+        '''
         YLogger.debug(self, "##########################################################################################")
         YLogger.debug(self, "Question (%s): %s", self._client.id, question)
 
