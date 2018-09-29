@@ -240,6 +240,9 @@ class Bot(object):
                 client_context.brain.properties.property("birthdate"))
 
     def has_conversation(self, client_context):
+        '''
+            Kiểm tra xem client_context hiện tại có conversation không 
+        '''
         return bool(client_context.userid in self._conversations)
 
     def conversation(self, client_context):
@@ -340,6 +343,9 @@ class Bot(object):
     def get_initial_question(self, client_context):
         '''
             Đưa ra câu hỏi khởi động cho người dùng - được định nghĩa trong config 
+
+            @params: 
+                client_context: ClientContext object 
         '''
         if self.initial_question_srai is not None:
             sentence = Sentence(client_context.brain.tokenizer, self.initial_question_srai)
@@ -351,6 +357,9 @@ class Bot(object):
             return self.initial_question
 
     def get_exit_response(self, client_context):
+        '''
+            tạo exit_response khi kết thúc phiên chat
+        '''        
         if self.exit_response_srai is not None:
             sentence = Sentence(client_context.brain.tokenizer, self.exit_response_srai)
             exit_response = client_context.brain.ask_question(client_context, sentence)
@@ -392,7 +401,12 @@ class Bot(object):
 
     def post_process_response(self, client_context, response, srai):
         '''
-
+            nếu có srai thì trả về response
+            không có thì tiếp tục quy trình bằng cách  gọi brain.post_process_response()
+            @params:
+                client_context
+                response
+                srai
         '''
         if srai is False:
             answer = client_context.brain.post_process_response(client_context, response).strip()
@@ -457,7 +471,13 @@ class Bot(object):
             convo_logger.info(qanda)
 
     def process_sentence(self, client_context, sentence, srai, responselogger):
-
+        '''
+            xử lý câu hỏi:
+                - kiểm tra giới hạn recursion hoặc timeout 
+                - lấy response từ brain.ask_question
+                - kiểm tra chính tả nếu cần
+                - handle_response hoặc handle_none_response
+        '''
         client_context.check_max_recursion()
         client_context.check_max_timeout()
 
@@ -477,6 +497,9 @@ class Bot(object):
         #return response
 
     def handle_response(self, client_context, sentence, response, srai, responselogger):
+        '''
+            gọi post_process_response để hoàn thiện và trả về câu trả lời 
+        '''
         YLogger.debug(client_context, "Raw Response (%s): %s", client_context.userid, response)
         sentence.response = response
         answer = self.post_process_response(client_context, response, srai)
@@ -485,7 +508,7 @@ class Bot(object):
 
     def handle_none_response(self, clientid, sentence, responselogger):
         '''
-            
+            trả về default_response 
         '''
         sentence.response = self.get_default_response(clientid)
         if responselogger is not None:

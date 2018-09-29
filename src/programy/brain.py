@@ -44,6 +44,33 @@ from programy.parser.tokenizer import Tokenizer
 
 
 class Brain(object):
+    '''
+        Object chứa logic load và xử lý các câu hội thoại
+
+        @props:
+            - _bot: Bot đang gọi brain
+            - _tokenizer ??/
+            - _aiml_parser: bộ parser file aiml
+            - _denormal_collection
+            - _gender_collection
+            - _person_collection
+            - _person2_collection
+            - _rdf_collection
+            - _sets_collection
+            - _maps_collection
+            - _properties_colelction
+            - _variables_collection
+            - _preprocessors: 
+            - _postprocessors: 
+            - _authentication:
+            - _authorization:
+            - _default_oob:
+            - _oobs
+            - _regex_templates:
+            - _dynamics_colllection:
+
+
+    '''
 
     def __init__(self, bot, configuration: BrainConfiguration):
         self._bot = bot
@@ -175,6 +202,9 @@ class Brain(object):
         return self._tokenizer
 
     def load_tokenizer(self):
+        '''
+            Load tokenizer từ configuration
+        '''
         if self.configuration is not None and self.configuration.tokenizer.classname is not None:
             YLogger.info(self, "Loading tokenizer from class [%s]", self.configuration.tokenizer.classname)
             tokenizer_class = ClassLoader.instantiate_class(self.configuration.tokenizer.classname)
@@ -186,15 +216,24 @@ class Brain(object):
         return AIMLParser(self)
 
     def load_aiml(self, configuration):
+        '''     
+            dùng aiml_parser để load file aiml 
+        '''
         YLogger.info(self, "Loading aiml source brain")
         self._aiml_parser.load_aiml(configuration)
 
     def reload_aimls(self):
+        '''
+            làm trống bộ parser và load lại file aiml
+        '''
         YLogger.info(self, "Loading aiml source brain")
         self._aiml_parser.empty()
         self._aiml_parser.load_aiml(self.configuration)
 
     def load_binary(self, configuration):
+        '''
+            load file binary >> có thể tăng tốc độ ?
+        '''
         YLogger.info(self, "Loading binary brain from [%s]", configuration.binaries.binary_filename)
         try:
             start = datetime.datetime.now()
@@ -226,7 +265,16 @@ class Brain(object):
         YLogger.info(self, "Brain save took a total of %.2f sec", diff.total_seconds())
 
     def load(self, configuration: BrainConfiguration):
-
+        '''
+            load tất cả các thể loại
+                - aiml
+                - collection
+                - service
+                - security_services
+                - oob_processor
+                - regex_templates
+                - dynamics
+        '''
         load_aiml = True
         if self.configuration.binaries.load_binary is True:
             load_aiml = self.load_binary(configuration)
@@ -256,6 +304,9 @@ class Brain(object):
         self.load_dynamics(configuration)
 
     def dump_brain_tree(self):
+        '''
+            
+        '''
         if self.configuration.braintree.file is not None:
             YLogger.debug(self, "Dumping AIML Graph as tree to [%s]",
                               self._configuration.braintree.file)
